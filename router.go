@@ -1,7 +1,8 @@
 package main
 
 import (
-	"litttlebear/auth/handler"
+	"fmt"
+	"html"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -31,12 +32,8 @@ func NewRouter() *mux.Router {
 
 var routes = Routes{
 	Route{
-		"UserList", "GET", "/users", handler.UsersGetHandler,
-	},
-	Route{
-		"UserInfo", "GET", "/user/{userID}", handler.UserGetHandler,
-	},
-	Route{
-		"UserAdd", "PUT", "/user", handler.UserPutHandler,
+		"Base", "GET", "/", func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+		},
 	},
 }
