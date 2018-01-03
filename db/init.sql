@@ -24,7 +24,7 @@ USE `auth`;
 -- 資料表結構 `app`
 --
 
-CREATE TABLE `app` (
+CREATE TABLE `apps` (
   `id` bigint(20) NOT NULL,
   `uuid` char(36) NOT NULL,
   `name` char(64) NOT NULL DEFAULT '',
@@ -40,12 +40,12 @@ CREATE TABLE `app` (
 -- 資料表新增前先清除舊資料 `app`
 --
 
-TRUNCATE TABLE `app`;
+TRUNCATE TABLE `apps`;
 --
 -- 資料表的匯出資料 `app`
 --
 
-INSERT INTO `app` (`id`, `uuid`, `name`, `start`, `end`, `count`, `enterprise`, `created_time`, `status`) VALUES
+INSERT INTO `apps` (`id`, `uuid`, `name`, `start`, `end`, `count`, `enterprise`, `created_time`, `status`) VALUES
 (2, '0f7b4143-f0ae-11e7-bd86-0242ac120003', 'example-bot', NULL, NULL, NULL, 'bb3e3925-f0ad-11e7-bd86-0242ac120003', CURRENT_TIMESTAMP, 1);
 
 -- --------------------------------------------------------
@@ -54,7 +54,7 @@ INSERT INTO `app` (`id`, `uuid`, `name`, `start`, `end`, `count`, `enterprise`, 
 -- 資料表結構 `enterprise`
 --
 
-CREATE TABLE `enterprise` (
+CREATE TABLE `enterprises` (
   `id` bigint(20) NOT NULL,
   `uuid` char(36) NOT NULL,
   `name` char(64) NOT NULL DEFAULT '',
@@ -66,13 +66,13 @@ CREATE TABLE `enterprise` (
 -- 資料表新增前先清除舊資料 `enterprise`
 --
 
-TRUNCATE TABLE `enterprise`;
+TRUNCATE TABLE `enterprises`;
 --
 -- 資料表的匯出資料 `enterprise`
 --
 
-INSERT INTO `enterprise` (`id`, `uuid`, `name`, `admin_user`, `created_time`) VALUES
-(1, 'bb3e3925-f0ad-11e7-bd86-0242ac120003', 'emotibot', NULL, CURRENT_TIMESTAMP);
+INSERT INTO `enterprises` (`id`, `uuid`, `name`, `admin_user`, `created_time`) VALUES
+(1, 'bb3e3925-f0ad-11e7-bd86-0242ac120003', 'emotibot', 'd3e03673-f0ad-11e7-bd86-0242ac12', CURRENT_TIMESTAMP);
 
 -- --------------------------------------------------------
 
@@ -112,14 +112,14 @@ INSERT INTO `users` (`id`, `uuid`, `name`, `display_name`, `email`, `enterprise`
 --
 -- 資料表索引 `app`
 --
-ALTER TABLE `app`
+ALTER TABLE `apps`
   ADD PRIMARY KEY (`id`),
   ADD KEY `enterprise` (`enterprise`);
 
 --
 -- 資料表索引 `enterprise`
 --
-ALTER TABLE `enterprise`
+ALTER TABLE `enterprises`
   ADD PRIMARY KEY (`id`),
   ADD KEY `uuid` (`uuid`);
 
@@ -137,13 +137,13 @@ ALTER TABLE `users`
 --
 -- 使用資料表 AUTO_INCREMENT `app`
 --
-ALTER TABLE `app`
+ALTER TABLE `apps`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- 使用資料表 AUTO_INCREMENT `enterprise`
 --
-ALTER TABLE `enterprise`
+ALTER TABLE `enterprises`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
@@ -159,12 +159,12 @@ ALTER TABLE `users`
 --
 -- 資料表的 Constraints `app`
 --
-ALTER TABLE `app`
-  ADD CONSTRAINT `app_ibfk_1` FOREIGN KEY (`enterprise`) REFERENCES `enterprise` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `apps`
+  ADD CONSTRAINT `app_ibfk_1` FOREIGN KEY (`enterprise`) REFERENCES `enterprises` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- 資料表的 Constraints `users`
 --
 ALTER TABLE `users`
-  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`enterprise`) REFERENCES `enterprise` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`enterprise`) REFERENCES `enterprises` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
