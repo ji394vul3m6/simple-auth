@@ -2,7 +2,8 @@ package dao
 
 import "litttlebear/simple-auth/data"
 
-type db interface {
+// DB define interface for different dao modules
+type DB interface {
 	GetEnterprises() *data.Enterprises
 	GetEnterprise() *data.Enterprise
 	AddEnterprise(enterprise data.Enterprise) *data.Enterprise
@@ -12,7 +13,7 @@ type db interface {
 	GetUser(enterpriseID string, userID string) *data.User
 	AddUser(enterpriseID string, user data.User) *data.User
 	UpdateUser(enterpriseID string, user data.User) *data.User
-	Disableuser(enterpriseID string, userID string) bool
+	DisableUser(enterpriseID string, userID string) bool
 	DeleteUser(enterpriseID string, userID string) bool
 
 	GetApps(enterpriseID string) *data.Apps
@@ -20,4 +21,5 @@ type db interface {
 	AddApp(enterpriseID string, app data.App) *data.App
 	UpdateApp(enterpriseID string, app data.App) *data.App
 	DisableApp(enterpriseID string, AppID string) bool
+	DeleteApp(enterpriseID string, AppID string) bool
 }
