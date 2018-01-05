@@ -8,7 +8,13 @@ import (
 
 	"litttlebear/simple-auth/dao"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+)
+
+const (
+	AuthPass = false
+	AuthFail = true
 )
 
 type Route struct {
@@ -30,6 +36,21 @@ func setUpRoutes() *Routes {
 		Route{
 			"GetEnterprises", "GET", "/enterprises", EnterprisesGetHandler,
 		},
+		Route{
+			"GetEnterprises", "GET", "/enterprise/{enterpriseID}", EnterpriseGetHandler,
+		},
+		Route{
+			"GetUsers", "GET", "/enterprise/{enterpriseID}/users", UsersGetHandler,
+		},
+		Route{
+			"GetUser", "GET", "/enterprise/{enterpriseID}/user/{userID}", UserGetHandler,
+		},
+		Route{
+			"GetApps", "GET", "/enterprise/{enterpriseID}/apps", AppsGetHandler,
+		},
+		Route{
+			"GetApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppGetHandler,
+		},
 	}
 	return &routes
 }
@@ -40,17 +61,33 @@ func setUpDB() {
 	setDB(&db)
 }
 
+func checkAuth(r *http.Request, rm *mux.RouteMatch) bool {
+	if r.RequestURI == "/test" {
+		return AuthFail
+	}
+	return AuthPass
+}
+
 func main() {
 	routes := setUpRoutes()
 	setUpDB()
 
 	router := mux.NewRouter().StrictSlash(true)
+
+	// Use matcher func first to check for all request first.
+	// It will be used for auth check in future commit
+	router.
+		MatcherFunc(checkAuth).
+		HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		})
+
 	for _, route := range *routes {
 		router.
 			Methods(route.Method).
 			Path(route.Pattern).
 			Name(route.Name).
-			Handler(route.HandlerFunc)
+			HandlerFunc(route.HandlerFunc)
 		log.Printf("Setup for path [%s:%s]", route.Method, route.Pattern)
 	}
 

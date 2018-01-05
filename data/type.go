@@ -11,6 +11,7 @@ type User struct {
 	Enterprise  *string `json:"enterprise"`
 	Type        *int    `json:"type"`
 	Password    *string `json:"-"`
+	Status      *int    `json:"status"`
 }
 
 // Users means []User
@@ -24,7 +25,9 @@ func (user User) IsValid() bool {
 
 // App store basic app usage information in it
 type App struct {
-	ID string `json:"id"`
+	ID     string  `json:"id"`
+	Name   *string `json:"name"`
+	Status *int    `json:"status"`
 	// ValidStart and ValidEnd will store in timestamp format
 	ValidStart *int `json:"valid_start"`
 	ValidEnd   *int `json:"valid_end"`
