@@ -8,8 +8,8 @@ type testCase struct {
 }
 
 var validTestCase = []testCase{
-	testCase{input: "", output: false},
-	testCase{input: "abc", output: true},
+	testCase{"", false},
+	testCase{"abc", true},
 }
 
 func TestValidString(t *testing.T) {
@@ -24,12 +24,12 @@ func TestValidString(t *testing.T) {
 }
 
 var validUUIDCase = []testCase{
-	testCase{input: "", output: false},
-	testCase{input: "abcd", output: false},
-	testCase{input: "0f7b4143-f0ae-11e7-bd86-0242ac120003", output: true},
-	testCase{input: "a0f7b4143-f0ae-11e7-bd86-0242ac120003b", output: false},
-	testCase{input: "a0f7b4143-f0ae-11e7-bd86-0242ac120003", output: false},
-	testCase{input: "0f7b4143-f0ae-11e7-bd86-0242ac120003b", output: false},
+	testCase{"", false},
+	testCase{"abcd", false},
+	testCase{"0f7b4143-f0ae-11e7-bd86-0242ac120003", true},
+	testCase{"a0f7b4143-f0ae-11e7-bd86-0242ac120003b", false},
+	testCase{"a0f7b4143-f0ae-11e7-bd86-0242ac120003", false},
+	testCase{"0f7b4143-f0ae-11e7-bd86-0242ac120003b", false},
 }
 
 func TestValidUUID(t *testing.T) {
