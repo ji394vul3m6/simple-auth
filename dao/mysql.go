@@ -12,6 +12,8 @@ const (
 	enterpriseTable = "enterprises"
 	userTable       = "users"
 	appTable        = "apps"
+
+	userColumnList = "uuid,display_name,email,enterprise,type,status"
 )
 
 type MYSQLController struct {
@@ -111,13 +113,23 @@ func (controller MYSQLController) DeleteEnterprise(enterpriseID string) (bool, e
 	return false, nil
 }
 
+func scanRowToUser(rows *sql.Rows) (*data.User, error) {
+	user := data.User{}
+	err := rows.Scan(&user.ID, &user.DisplayName, &user.Email, &user.Enterprise, &user.Type, &user.Status)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (controller MYSQLController) GetUsers(enterpriseID string) (*data.Users, error) {
 	ok, err := controller.checkDB()
 	if !ok {
 		return nil, err
 	}
 	users := make(data.Users, 0)
-	rows, err := controller.connectDB.Query(fmt.Sprintf("SELECT uuid,name,display_name,status from %s where enterprise = ?", userTable), enterpriseID)
+	rows, err := controller.connectDB.Query(fmt.Sprintf("SELECT %s from %s where enterprise = ?",
+		userColumnList, userTable), enterpriseID)
 	if err != nil {
 		_, file, line, _ := runtime.Caller(1)
 		log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
@@ -126,14 +138,13 @@ func (controller MYSQLController) GetUsers(enterpriseID string) (*data.Users, er
 	defer rows.Close()
 
 	for rows.Next() {
-		user := data.User{}
-		err := rows.Scan(&user.ID, &user.Name, &user.DisplayName, &user.Status)
+		user, err := scanRowToUser(rows)
 		if err != nil {
 			_, file, line, _ := runtime.Caller(0)
 			log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
 			return nil, err
 		}
-		users = append(users, user)
+		users = append(users, *user)
 	}
 
 	return &users, nil
@@ -144,7 +155,8 @@ func (controller MYSQLController) GetUser(enterpriseID string, userID string) (*
 		return nil, err
 	}
 
-	queryStr := fmt.Sprintf("SELECT uuid,name,display_name,status from %s where enterprise = ? and userID = ?", userTable)
+	queryStr := fmt.Sprintf("SELECT %s from %s where enterprise = ? and userID = ?",
+		userColumnList, userTable)
 	rows, err := controller.connectDB.Query(queryStr, enterpriseID, userID)
 	if err != nil {
 		_, file, line, _ := runtime.Caller(1)
@@ -154,17 +166,73 @@ func (controller MYSQLController) GetUser(enterpriseID string, userID string) (*
 	defer rows.Close()
 
 	if rows.Next() {
-		user := data.User{}
-		err := rows.Scan(&user.ID, &user.Name, &user.DisplayName, &user.Status)
+		user, err := scanRowToUser(rows)
 		if err != nil {
 			_, file, line, _ := runtime.Caller(0)
 			log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
 			return nil, err
 		}
-		return &user, nil
+		return user, nil
 	}
 
 	return nil, nil
+}
+func (controller MYSQLController) GetAdminUser(enterpriseID string) (*data.User, error) {
+	ok, err := controller.checkDB()
+	if !ok {
+		return nil, err
+	}
+	queryStr := fmt.Sprintf(
+		"SELECT u.%s FROM %s as u LEFT JOIN %s as e ON e.admin_user = u.uuid AND e.uuid = ?",
+		userColumnList, userTable, enterpriseTable)
+	rows, err := controller.connectDB.Query(queryStr, enterpriseID)
+	if err != nil {
+		_, file, line, _ := runtime.Caller(1)
+		log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		user, err := scanRowToUser(rows)
+		if err != nil {
+			_, file, line, _ := runtime.Caller(0)
+			log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
+			return nil, err
+		}
+		return user, nil
+	}
+
+	return nil, nil
+}
+func (controller MYSQLController) GetAuthUser(email string, passwd string) (string, *data.User, error) {
+	ok, err := controller.checkDB()
+	if !ok {
+		return "", nil, err
+	}
+
+	queryStr := fmt.Sprintf("SELECT %s from %s where email = ? and password = ?",
+		userColumnList, userTable)
+	rows, err := controller.connectDB.Query(queryStr, email, passwd)
+	if err != nil {
+		_, file, line, _ := runtime.Caller(1)
+		log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
+		return "", nil, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		enterprise := ""
+		user, err := scanRowToUser(rows)
+		if err != nil {
+			_, file, line, _ := runtime.Caller(0)
+			log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
+			return "", nil, err
+		}
+		return enterprise, user, nil
+	}
+
+	return "", nil, nil
 }
 func (controller MYSQLController) AddUser(enterpriseID string, user data.User) (*data.User, error) {
 	ok, err := controller.checkDB()

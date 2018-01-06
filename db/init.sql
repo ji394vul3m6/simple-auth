@@ -83,7 +83,6 @@ INSERT INTO `enterprises` (`id`, `uuid`, `name`, `admin_user`, `created_time`) V
 CREATE TABLE `users` (
   `id` bigint(20) NOT NULL,
   `uuid` char(36) NOT NULL,
-  `name` char(32) NOT NULL DEFAULT '',
   `display_name` char(64) DEFAULT NULL,
   `email` char(255) NOT NULL DEFAULT '',
   `enterprise` char(36) NOT NULL DEFAULT '',
@@ -102,8 +101,8 @@ TRUNCATE TABLE `users`;
 -- 資料表的匯出資料 `users`
 --
 
-INSERT INTO `users` (`id`, `uuid`, `name`, `display_name`, `email`, `enterprise`, `type`, `password`, `created_time`, `status`) VALUES
-(1, 'd3e03673-f0ad-11e7-bd86-0242ac120003', 'emotibot', NULL, 'emotibot@test.com', 'bb3e3925-f0ad-11e7-bd86-0242ac120003', 2, '1a165ac8a11f729ecfcea4cfb58adb74', CURRENT_TIMESTAMP, 1);
+INSERT INTO `users` (`id`, `uuid`, `display_name`, `email`, `enterprise`, `type`, `password`, `created_time`, `status`) VALUES
+(1, 'd3e03673-f0ad-11e7-bd86-0242ac120003', 'emotibot', NULL, 'emotibot@test.com', 'bb3e3925-f0ad-11e7-bd86-0242ac120003', 1, '1a165ac8a11f729ecfcea4cfb58adb74', CURRENT_TIMESTAMP, 1);
 
 --
 -- 已匯出資料表的索引

@@ -1,11 +1,12 @@
 package data
 
-import "litttlebear/simple-auth/util"
+import (
+	"litttlebear/simple-auth/util"
+)
 
 // User store the basic logging information of user
 type User struct {
 	ID          string  `json:"id"`
-	Name        *string `json:"name"`
 	DisplayName *string `json:"display_name"`
 	Email       *string `json:"email"`
 	Enterprise  *string `json:"enterprise"`
@@ -20,7 +21,12 @@ type Users []User
 // IsValid will check valid of not
 // User is valid only if username, email and password are not empty
 func (user User) IsValid() bool {
-	return util.IsValidString(user.Name) && util.IsValidString(user.Email) && util.IsValidString(user.Password)
+	return util.IsValidString(user.Email) && util.IsValidString(user.Password)
+}
+
+// GenerateToken will generate json web token for current user
+func (user User) GenerateToken() string {
+	return "temp_token"
 }
 
 // App store basic app usage information in it
@@ -49,3 +55,9 @@ type Enterprise struct {
 
 // Enterprises is array of Enterprise
 type Enterprises []Enterprise
+
+// LoginInfo is struct return when calling login
+type LoginInfo struct {
+	Token string `json:"token"`
+	Info  *User  `json:"info"`
+}
