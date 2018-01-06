@@ -155,7 +155,7 @@ func (controller MYSQLController) GetUser(enterpriseID string, userID string) (*
 		return nil, err
 	}
 
-	queryStr := fmt.Sprintf("SELECT %s from %s where enterprise = ? and userID = ?",
+	queryStr := fmt.Sprintf("SELECT %s from %s where enterprise = ? and uuid = ?",
 		userColumnList, userTable)
 	rows, err := controller.connectDB.Query(queryStr, enterpriseID, userID)
 	if err != nil {

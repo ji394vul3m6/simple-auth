@@ -99,16 +99,24 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	enterprise, user, errMsg := login(email, passwd)
 	if errMsg != "" {
 		returnFail(w, errMsg)
+		return
 	} else if enterprise == nil && user == nil {
 		returnForbidden(w)
-	} else {
-		token := user.GenerateToken()
-		loginRet := data.LoginInfo{
-			Token: token,
-			Info:  user,
-		}
-		returnOKMsg(w, errMsg, loginRet)
+		return
 	}
+
+	token, err := user.GenerateToken()
+	if err != nil {
+		returnFail(w, err.Error())
+		return
+	}
+
+	loginRet := data.LoginInfo{
+		Token: token,
+		Info:  user,
+	}
+	returnOKMsg(w, errMsg, loginRet)
+
 }
 
 func returnMsg(w http.ResponseWriter, errMsg string, retData interface{}) {

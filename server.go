@@ -5,8 +5,10 @@ import (
 	"html"
 	"log"
 	"net/http"
+	"strings"
 
 	"litttlebear/simple-auth/dao"
+	"litttlebear/simple-auth/data"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -68,7 +70,19 @@ func setUpDB() {
 
 func checkAuth(r *http.Request, rm *mux.RouteMatch) bool {
 	log.Printf("Access: %s %s", r.Method, r.RequestURI)
-	if r.RequestURI == "/test" {
+	if r.RequestURI == URLPrefix+"/login" {
+		return AuthPass
+	}
+
+	authorization := r.Header.Get("Authorization")
+	vals := strings.Split(authorization, " ")
+	if len(vals) < 2 {
+		return AuthFail
+	}
+
+	userInfo := data.User{}
+	err := userInfo.SetValueWithToken(vals[1])
+	if err != nil {
 		return AuthFail
 	}
 	return AuthPass
