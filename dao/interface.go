@@ -11,6 +11,8 @@ type DB interface {
 
 	GetUsers(enterpriseID string) (*data.Users, error)
 	GetUser(enterpriseID string, userID string) (*data.User, error)
+	GetAdminUser(enterpriseID string) (*data.User, error)
+	GetAuthUser(email string, passwd string) (enterpriseID string, user *data.User, err error)
 	AddUser(enterpriseID string, user data.User) (*data.User, error)
 	UpdateUser(enterpriseID string, user data.User) (*data.User, error)
 	DisableUser(enterpriseID string, userID string) (bool, error)

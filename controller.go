@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"litttlebear/simple-auth/data"
+	"litttlebear/simple-auth/util"
 	"net/http"
 	"reflect"
 
@@ -18,6 +19,11 @@ func EnterprisesGetHandler(w http.ResponseWriter, r *http.Request) {
 func EnterpriseGetHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+
 	retData, errMsg := getEnterprise(enterpriseID)
 	returnMsg(w, errMsg, retData)
 }
@@ -25,6 +31,11 @@ func EnterpriseGetHandler(w http.ResponseWriter, r *http.Request) {
 func UsersGetHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+
 	retData, errMsg := getUsers(enterpriseID)
 	returnMsg(w, errMsg, retData)
 }
@@ -32,7 +43,17 @@ func UsersGetHandler(w http.ResponseWriter, r *http.Request) {
 func UserGetHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+
 	userID := vars["userID"]
+	if !util.IsValidUUID(userID) {
+		returnBadRequest(w, "userID")
+		return
+	}
+
 	retData, errMsg := getUser(enterpriseID, userID)
 	returnMsg(w, errMsg, retData)
 }
@@ -40,6 +61,11 @@ func UserGetHandler(w http.ResponseWriter, r *http.Request) {
 func AppsGetHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+
 	retData, errMsg := getApps(enterpriseID)
 	returnMsg(w, errMsg, retData)
 }
@@ -47,9 +73,42 @@ func AppsGetHandler(w http.ResponseWriter, r *http.Request) {
 func AppGetHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+
 	appID := vars["appID"]
+	if !util.IsValidUUID(appID) {
+		returnBadRequest(w, "appID")
+		return
+	}
 	retData, errMsg := getApp(enterpriseID, appID)
 	returnMsg(w, errMsg, retData)
+}
+
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	email := r.Form.Get("email")
+	passwd := r.Form.Get("passwd")
+	if !util.IsValidString(&email) || !util.IsValidString(&passwd) {
+		returnBadRequest(w, "")
+		return
+	}
+
+	enterprise, user, errMsg := login(email, passwd)
+	if errMsg != "" {
+		returnFail(w, errMsg)
+	} else if enterprise == nil && user == nil {
+		returnForbidden(w)
+	} else {
+		token := user.GenerateToken()
+		loginRet := data.LoginInfo{
+			Token: token,
+			Info:  user,
+		}
+		returnOKMsg(w, errMsg, loginRet)
+	}
 }
 
 func returnMsg(w http.ResponseWriter, errMsg string, retData interface{}) {
@@ -84,6 +143,10 @@ func returnBadRequest(w http.ResponseWriter, column string) {
 
 func returnUnauthorized(w http.ResponseWriter) {
 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
+}
+
+func returnForbidden(w http.ResponseWriter) {
+	http.Error(w, "Forbidden", http.StatusForbidden)
 }
 
 func returnFail(w http.ResponseWriter, errMsg string) {

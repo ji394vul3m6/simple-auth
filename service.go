@@ -23,6 +23,17 @@ func getEnterprise(enterpriseID string) (*data.Enterprise, string) {
 	if err != nil {
 		return nil, err.Error()
 	}
+	apps, err := useDB.GetApps(enterpriseID)
+	if err != nil {
+		return nil, err.Error()
+	}
+	adminUser, err := useDB.GetAdminUser(enterpriseID)
+	if err != nil {
+		return nil, err.Error()
+	}
+
+	enterprise.Apps = apps
+	enterprise.AdminUser = adminUser
 	return enterprise, ""
 }
 func getUsers(enterpriseID string) (*data.Users, string) {
@@ -52,4 +63,17 @@ func getApp(enterpriseID string, appID string) (*data.App, string) {
 		return nil, err.Error()
 	}
 	return app, ""
+}
+
+func login(email string, passwd string) (*data.Enterprise, *data.User, string) {
+	enterpriseID, user, err := useDB.GetAuthUser(email, passwd)
+	if err != nil {
+		return nil, nil, err.Error()
+	}
+
+	enterprise, err := useDB.GetEnterprise(enterpriseID)
+	if err != nil {
+		return nil, nil, err.Error()
+	}
+	return enterprise, user, ""
 }

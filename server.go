@@ -15,6 +15,8 @@ import (
 const (
 	AuthPass = false
 	AuthFail = true
+
+	URLPrefix = "/auth"
 )
 
 type Route struct {
@@ -51,6 +53,9 @@ func setUpRoutes() *Routes {
 		Route{
 			"GetApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppGetHandler,
 		},
+		Route{
+			"Login", "POST", "/login", LoginHandler,
+		},
 	}
 	return &routes
 }
@@ -62,6 +67,7 @@ func setUpDB() {
 }
 
 func checkAuth(r *http.Request, rm *mux.RouteMatch) bool {
+	log.Printf("Access: %s %s", r.Method, r.RequestURI)
 	if r.RequestURI == "/test" {
 		return AuthFail
 	}
@@ -85,10 +91,10 @@ func main() {
 	for _, route := range *routes {
 		router.
 			Methods(route.Method).
-			Path(route.Pattern).
+			Path(URLPrefix + route.Pattern).
 			Name(route.Name).
 			HandlerFunc(route.HandlerFunc)
-		log.Printf("Setup for path [%s:%s]", route.Method, route.Pattern)
+		log.Printf("Setup for path [%s:%s]", route.Method, URLPrefix+route.Pattern)
 	}
 
 	log.Printf("Start server on port %d", 11180)
