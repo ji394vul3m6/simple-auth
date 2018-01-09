@@ -9,16 +9,14 @@ import (
 
 	"litttlebear/simple-auth/dao"
 	"litttlebear/simple-auth/data"
+	"litttlebear/simple-auth/util"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 )
 
 const (
-	AuthPass = false
-	AuthFail = true
-
-	URLPrefix = "/auth"
+	prefixURL = "/auth"
 )
 
 type Route struct {
@@ -26,40 +24,42 @@ type Route struct {
 	Method      string
 	Pattern     string
 	HandlerFunc http.HandlerFunc
+	GrantType   []interface{}
 }
 
 type Routes []Route
 
-func setUpRoutes() *Routes {
-	var routes = Routes{
+var routes Routes
+
+func setUpRoutes() {
+	routes = Routes{
 		Route{
 			"Base", "GET", "/", func(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-			},
+			}, []interface{}{0, 1, 2},
 		},
 		Route{
-			"GetEnterprises", "GET", "/enterprises", EnterprisesGetHandler,
+			"GetEnterprises", "GET", "/enterprises", EnterprisesGetHandler, []interface{}{0},
 		},
 		Route{
-			"GetEnterprises", "GET", "/enterprise/{enterpriseID}", EnterpriseGetHandler,
+			"GetEnterprises", "GET", "/enterprise/{enterpriseID}", EnterpriseGetHandler, []interface{}{0},
 		},
 		Route{
-			"GetUsers", "GET", "/enterprise/{enterpriseID}/users", UsersGetHandler,
+			"GetUsers", "GET", "/enterprise/{enterpriseID}/users", UsersGetHandler, []interface{}{0, 1},
 		},
 		Route{
-			"GetUser", "GET", "/enterprise/{enterpriseID}/user/{userID}", UserGetHandler,
+			"GetUser", "GET", "/enterprise/{enterpriseID}/user/{userID}", UserGetHandler, []interface{}{0, 1},
 		},
 		Route{
-			"GetApps", "GET", "/enterprise/{enterpriseID}/apps", AppsGetHandler,
+			"GetApps", "GET", "/enterprise/{enterpriseID}/apps", AppsGetHandler, []interface{}{0, 1},
 		},
 		Route{
-			"GetApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppGetHandler,
+			"GetApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppGetHandler, []interface{}{0, 1},
 		},
 		Route{
-			"Login", "POST", "/login", LoginHandler,
+			"Login", "POST", "/login", LoginHandler, []interface{}{},
 		},
 	}
-	return &routes
 }
 
 func setUpDB() {
@@ -68,47 +68,65 @@ func setUpDB() {
 	setDB(&db)
 }
 
-func checkAuth(r *http.Request, rm *mux.RouteMatch) bool {
+func checkAuth(r *http.Request, route Route) bool {
 	log.Printf("Access: %s %s", r.Method, r.RequestURI)
-	if r.RequestURI == URLPrefix+"/login" {
-		return AuthPass
+	if len(route.GrantType) == 0 {
+		log.Print("[Auth check] pass: no need")
+		return true
 	}
 
 	authorization := r.Header.Get("Authorization")
 	vals := strings.Split(authorization, " ")
 	if len(vals) < 2 {
-		return AuthFail
+		log.Print("[Auth check] Auth fail: no header")
+		return false
 	}
 
 	userInfo := data.User{}
 	err := userInfo.SetValueWithToken(vals[1])
 	if err != nil {
-		return AuthFail
+		log.Printf("[Auth check] Auth fail: no valid token [%s]", err.Error())
+		return false
 	}
-	return AuthPass
+
+	if !util.IsInSlice(*userInfo.Type, route.GrantType) {
+		log.Printf("[Auth check] Need user be [%#v], get [%d]", route.GrantType, *userInfo.Type)
+		return false
+	}
+
+	// Type 1 can only check enterprise of itself
+	if *userInfo.Type == 1 {
+		vars := mux.Vars(r)
+		enterpriseID := vars["enterpriseID"]
+		if enterpriseID != *userInfo.Enterprise {
+			log.Printf("[Auth check] admin of [%s] can not access [%s]", *userInfo.Enterprise, enterpriseID)
+			return false
+		}
+	}
+
+	return true
 }
 
 func main() {
-	routes := setUpRoutes()
+	setUpRoutes()
 	setUpDB()
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	// Use matcher func first to check for all request first.
-	// It will be used for auth check in future commit
-	router.
-		MatcherFunc(checkAuth).
-		HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		})
-
-	for _, route := range *routes {
+	for idx := range routes {
+		route := routes[idx]
 		router.
 			Methods(route.Method).
-			Path(URLPrefix + route.Pattern).
+			Path(prefixURL + route.Pattern).
 			Name(route.Name).
-			HandlerFunc(route.HandlerFunc)
-		log.Printf("Setup for path [%s:%s]", route.Method, URLPrefix+route.Pattern)
+			HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if checkAuth(r, route) {
+					route.HandlerFunc(w, r)
+				} else {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				}
+			})
+		log.Printf("Setup for path [%s:%s]", route.Method, prefixURL+route.Pattern)
 	}
 
 	log.Printf("Start server on port %d", 11180)
