@@ -34,3 +34,13 @@ func IsValidMD5(str string) bool {
 	match, _ := regexp.MatchString(MD5Pattern, str)
 	return match
 }
+
+// IsInSlice will check if check is in container or not
+func IsInSlice(check interface{}, container []interface{}) bool {
+	for _, v := range container {
+		if v == check {
+			return true
+		}
+	}
+	return false
+}
