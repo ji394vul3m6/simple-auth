@@ -1,28 +1,27 @@
--- phpMyAdmin SQL Dump
--- version 4.7.4
--- https://www.phpmyadmin.net/
---
--- 主機: db
--- 產生時間： 2018 年 01 月 03 日 18:13
--- 伺服器版本: 5.7.19
--- PHP 版本： 7.0.21
+# ************************************************************
+# Sequel Pro SQL dump
+# Version 4541
+#
+# http://www.sequelpro.com/
+# https://github.com/sequelpro/sequelpro
+#
+# Host: 127.0.0.1 (MySQL 5.7.20)
+# Database: auth
+# Generation Time: 2018-04-05 16:18:29 +0000
+# ************************************************************
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
-START TRANSACTION;
-SET time_zone = "+00:00";
 
---
--- 資料庫： `auth`
---
-CREATE DATABASE IF NOT EXISTS `auth` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `auth`;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- --------------------------------------------------------
 
---
--- 資料表結構 `app`
---
+# Dump of table apps
+# ------------------------------------------------------------
 
 CREATE TABLE `apps` (
   `id` bigint(20) NOT NULL,
@@ -33,137 +32,133 @@ CREATE TABLE `apps` (
   `count` bigint(20) DEFAULT NULL,
   `enterprise` char(36) NOT NULL DEFAULT '',
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `status` tinyint(1) NOT NULL DEFAULT '0'
+  `status` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid` (`uuid`),
+  KEY `enterprise of app` (`enterprise`),
+  CONSTRAINT `enterprise of app` FOREIGN KEY (`enterprise`) REFERENCES `enterprises` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- 資料表新增前先清除舊資料 `app`
---
+LOCK TABLES `apps` WRITE;
+/*!40000 ALTER TABLE `apps` DISABLE KEYS */;
 
-TRUNCATE TABLE `apps`;
---
--- 資料表的匯出資料 `app`
---
+INSERT INTO `apps` (`id`, `uuid`, `name`, `start`, `end`, `count`, `enterprise`, `created_time`, `status`)
+VALUES
+	(1,'0f7b4143-f0ae-11e7-bd86-0242ac120003','example-bot',NULL,NULL,NULL,'bb3e3925-f0ad-11e7-bd86-0242ac120003','2018-04-05 15:21:02',1);
 
-INSERT INTO `apps` (`id`, `uuid`, `name`, `start`, `end`, `count`, `enterprise`, `created_time`, `status`) VALUES
-(2, '0f7b4143-f0ae-11e7-bd86-0242ac120003', 'example-bot', NULL, NULL, NULL, 'bb3e3925-f0ad-11e7-bd86-0242ac120003', CURRENT_TIMESTAMP, 1);
+/*!40000 ALTER TABLE `apps` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- --------------------------------------------------------
 
---
--- 資料表結構 `enterprise`
---
+# Dump of table enterprises
+# ------------------------------------------------------------
 
 CREATE TABLE `enterprises` (
   `id` bigint(20) NOT NULL,
   `uuid` char(36) NOT NULL,
-  `name` char(64) NOT NULL DEFAULT '',
+  `name` varchar(64) NOT NULL DEFAULT '',
   `admin_user` char(32) DEFAULT NULL,
-  `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid` (`uuid`),
+  KEY `admin of enterprise` (`admin_user`),
+  CONSTRAINT `admin of enterprise` FOREIGN KEY (`admin_user`) REFERENCES `users` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- 資料表新增前先清除舊資料 `enterprise`
---
+LOCK TABLES `enterprises` WRITE;
+/*!40000 ALTER TABLE `enterprises` DISABLE KEYS */;
 
-TRUNCATE TABLE `enterprises`;
---
--- 資料表的匯出資料 `enterprise`
---
+INSERT INTO `enterprises` (`id`, `uuid`, `name`, `admin_user`, `created_time`)
+VALUES
+	(1,'bb3e3925-f0ad-11e7-bd86-0242ac120003','emotibot','d3e03673-f0ad-11e7-bd86-0242ac12','2018-04-05 15:21:02');
 
-INSERT INTO `enterprises` (`id`, `uuid`, `name`, `admin_user`, `created_time`) VALUES
-(1, 'bb3e3925-f0ad-11e7-bd86-0242ac120003', 'emotibot', 'd3e03673-f0ad-11e7-bd86-0242ac12', CURRENT_TIMESTAMP);
+/*!40000 ALTER TABLE `enterprises` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- --------------------------------------------------------
 
---
--- 資料表結構 `users`
---
+# Dump of table user_column
+# ------------------------------------------------------------
+
+CREATE TABLE `user_column` (
+  `id` bigint(20) NOT NULL,
+  `column` char(32) NOT NULL DEFAULT '',
+  `display_name` varchar(64) NOT NULL DEFAULT '',
+  `enterprise` char(36) NOT NULL DEFAULT '',
+  `note` varchar(64) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  KEY `enterprise of custom column` (`enterprise`),
+  CONSTRAINT `enterprise of custom column` FOREIGN KEY (`enterprise`) REFERENCES `enterprises` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+LOCK TABLES `user_column` WRITE;
+/*!40000 ALTER TABLE `user_column` DISABLE KEYS */;
+
+INSERT INTO `user_column` (`id`, `column`, `display_name`, `enterprise`, `note`)
+VALUES
+	(0,'custom1','自訂屬性1','bb3e3925-f0ad-11e7-bd86-0242ac120003','示範自訂屬性效果');
+
+/*!40000 ALTER TABLE `user_column` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+# Dump of table user_info
+# ------------------------------------------------------------
+
+CREATE TABLE `user_info` (
+  `id` bigint(20) NOT NULL,
+  `user_id` char(36) NOT NULL DEFAULT '',
+  `column_id` bigint(64) NOT NULL,
+  `value` text NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user of info` (`user_id`),
+  KEY `column of info` (`column_id`),
+  CONSTRAINT `column of info` FOREIGN KEY (`column_id`) REFERENCES `user_column` (`id`),
+  CONSTRAINT `user of info` FOREIGN KEY (`user_id`) REFERENCES `users` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+LOCK TABLES `user_info` WRITE;
+/*!40000 ALTER TABLE `user_info` DISABLE KEYS */;
+
+INSERT INTO `user_info` (`id`, `user_id`, `column_id`, `value`)
+VALUES
+	(0,'d3e03673-f0ad-11e7-bd86-0242ac12',0,'custom_value1');
+
+/*!40000 ALTER TABLE `user_info` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+# Dump of table users
+# ------------------------------------------------------------
 
 CREATE TABLE `users` (
   `id` bigint(20) NOT NULL,
   `uuid` char(36) NOT NULL,
-  `display_name` char(64) DEFAULT NULL,
+  `display_name` varchar(64) NOT NULL DEFAULT '',
   `email` char(255) NOT NULL DEFAULT '',
   `enterprise` char(36) NOT NULL DEFAULT '',
-  `type` tinyint(1) UNSIGNED NOT NULL DEFAULT '2',
+  `type` tinyint(1) unsigned NOT NULL DEFAULT '2',
   `password` char(32) NOT NULL DEFAULT '',
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `status` tinyint(1) NOT NULL DEFAULT '0'
+  `status` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- 資料表新增前先清除舊資料 `users`
---
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
 
-TRUNCATE TABLE `users`;
---
--- 資料表的匯出資料 `users`
---
+INSERT INTO `users` (`id`, `uuid`, `display_name`, `email`, `enterprise`, `type`, `password`, `created_time`, `status`)
+VALUES
+	(1,'d3e03673-f0ad-11e7-bd86-0242ac12','TestUser','test@test.com','bb3e3925-f0ad-11e7-bd86-0242ac120003',1,'5d9c68c6c50ed3d02a2fcf54f63993b6','2018-04-05 15:21:54',1);
 
-INSERT INTO `users` (`id`, `uuid`, `display_name`, `email`, `enterprise`, `type`, `password`, `created_time`, `status`) VALUES
-(1, 'd3e03673-f0ad-11e7-bd86-0242ac120003', 'emotibot', NULL, 'emotibot@test.com', 'bb3e3925-f0ad-11e7-bd86-0242ac120003', 1, '1a165ac8a11f729ecfcea4cfb58adb74', CURRENT_TIMESTAMP, 1);
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
 
---
--- 已匯出資料表的索引
---
 
---
--- 資料表索引 `app`
---
-ALTER TABLE `apps`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `enterprise` (`enterprise`);
 
---
--- 資料表索引 `enterprise`
---
-ALTER TABLE `enterprises`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `uuid` (`uuid`);
-
---
--- 資料表索引 `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `enterprise` (`enterprise`);
-
---
--- 在匯出的資料表使用 AUTO_INCREMENT
---
-
---
--- 使用資料表 AUTO_INCREMENT `app`
---
-ALTER TABLE `apps`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- 使用資料表 AUTO_INCREMENT `enterprise`
---
-ALTER TABLE `enterprises`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- 使用資料表 AUTO_INCREMENT `users`
---
-ALTER TABLE `users`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- 已匯出資料表的限制(Constraint)
---
-
---
--- 資料表的 Constraints `app`
---
-ALTER TABLE `apps`
-  ADD CONSTRAINT `app_ibfk_1` FOREIGN KEY (`enterprise`) REFERENCES `enterprises` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- 資料表的 Constraints `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`enterprise`) REFERENCES `enterprises` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
-COMMIT;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
