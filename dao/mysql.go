@@ -44,8 +44,8 @@ func (controller MYSQLController) checkDB() (bool, error) {
 		log.Fatal("connectDB is nil, db is !initialized properly")
 		return false, fmt.Errorf("DB hasn't init")
 	}
-	controller.connectDB.Ping()
-	return true, nil
+	err := controller.connectDB.Ping()
+	return err == nil, err
 }
 
 func (controller MYSQLController) GetEnterprises() (*data.Enterprises, error) {
@@ -113,6 +113,14 @@ func (controller MYSQLController) DeleteEnterprise(enterpriseID string) (bool, e
 	return false, nil
 }
 
+func scanSingleRowToUser(row *sql.Row) (*data.User, error) {
+	user := data.User{}
+	err := row.Scan(&user.ID, &user.DisplayName, &user.Email, &user.Enterprise, &user.Type, &user.Status)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
 func scanRowToUser(rows *sql.Rows) (*data.User, error) {
 	user := data.User{}
 	err := rows.Scan(&user.ID, &user.DisplayName, &user.Email, &user.Enterprise, &user.Type, &user.Status)
@@ -127,6 +135,13 @@ func (controller MYSQLController) GetUsers(enterpriseID string) (*data.Users, er
 	if !ok {
 		return nil, err
 	}
+
+	userInfoMap, err := controller.getUsersInfo(enterpriseID)
+	if err != nil {
+		logDBError(err)
+		return nil, err
+	}
+
 	users := make(data.Users, 0)
 	rows, err := controller.connectDB.Query(fmt.Sprintf("SELECT %s from %s where enterprise = ?",
 		userColumnList, userTable), enterpriseID)
@@ -144,6 +159,11 @@ func (controller MYSQLController) GetUsers(enterpriseID string) (*data.Users, er
 			log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
 			return nil, err
 		}
+
+		if info, ok := userInfoMap[user.ID]; ok {
+			user.CustomInfo = info
+		}
+
 		users = append(users, *user)
 	}
 
@@ -157,25 +177,25 @@ func (controller MYSQLController) GetUser(enterpriseID string, userID string) (*
 
 	queryStr := fmt.Sprintf("SELECT %s from %s where enterprise = ? and uuid = ?",
 		userColumnList, userTable)
-	rows, err := controller.connectDB.Query(queryStr, enterpriseID, userID)
+	row := controller.connectDB.QueryRow(queryStr, enterpriseID, userID)
 	if err != nil {
-		_, file, line, _ := runtime.Caller(1)
-		log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
+		logDBError(err)
 		return nil, err
 	}
-	defer rows.Close()
-
-	if rows.Next() {
-		user, err := scanRowToUser(rows)
-		if err != nil {
-			_, file, line, _ := runtime.Caller(0)
-			log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
-			return nil, err
-		}
-		return user, nil
+	user, err := scanSingleRowToUser(row)
+	if err != nil {
+		logDBError(err)
+		return nil, err
 	}
 
-	return nil, nil
+	info, err := controller.getUserInfo(enterpriseID, userID)
+	if err != nil {
+		logDBError(err)
+		return nil, err
+	}
+	user.CustomInfo = info
+
+	return user, nil
 }
 func (controller MYSQLController) GetAdminUser(enterpriseID string) (*data.User, error) {
 	ok, err := controller.checkDB()
@@ -254,6 +274,70 @@ func (controller MYSQLController) DisableUser(enterpriseID string, userID string
 func (controller MYSQLController) DeleteUser(enterpriseID string, userID string) (bool, error) {
 	return false, nil
 }
+func (controller MYSQLController) getUserInfo(enterpriseID string, userID string) (ret *map[string]string, err error) {
+	err = nil
+	ok, err := controller.checkDB()
+	if !ok {
+		return
+	}
+
+	queryStr := `SELECT col.column, info.value
+		FROM user_column as col, user_info as info
+		WHERE info.column_id = col.id AND info.user_id = ? AND col.enterprise = ?`
+	rows, err := controller.connectDB.Query(queryStr, userID, enterpriseID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	infoMap := make(map[string]string)
+	for rows.Next() {
+		var key string
+		var val string
+		err = rows.Scan(&key, &val)
+		if err != nil {
+			return
+		}
+		infoMap[key] = val
+	}
+	ret = &infoMap
+	return
+}
+func (controller MYSQLController) getUsersInfo(enterpriseID string) (ret map[string]map[string]string, err error) {
+	err = nil
+	ok, err := controller.checkDB()
+	if !ok {
+		return
+	}
+
+	queryStr := `SELECT info.user_id, col.column, info.value
+		FROM user_column as col, user_info as info
+		WHERE info.column_id = col.id AND col.enterprise = ?`
+	rows, err := controller.connectDB.Query(queryStr, enterpriseID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	ret = make(map[string]map[string]string)
+	for rows.Next() {
+		var userID string
+		var key string
+		var val string
+		err = rows.Scan(&userID, &key, &val)
+		if err != nil {
+			return
+		}
+		if userInfo, ok := ret[userID]; !ok {
+			ret[userID] = map[string]string{
+				key: val,
+			}
+		} else {
+			userInfo[key] = val
+		}
+	}
+	return
+}
 
 func (controller MYSQLController) GetApps(enterpriseID string) (*data.Apps, error) {
 	ok, err := controller.checkDB()
@@ -329,4 +413,9 @@ func (controller MYSQLController) DisableApp(enterpriseID string, AppID string) 
 }
 func (controller MYSQLController) DeleteApp(enterpriseID string, AppID string) (bool, error) {
 	return false, nil
+}
+
+func logDBError(err error) {
+	_, file, line, _ := runtime.Caller(1)
+	log.Printf("Error in [%s:%d] [%s]\n", file, line, err.Error())
 }

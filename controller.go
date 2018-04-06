@@ -98,7 +98,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	enterprise, user, errMsg := login(email, passwd)
 	if errMsg != "" {
-		returnFail(w, errMsg)
+		returnInternalError(w, errMsg)
 		return
 	} else if enterprise == nil && user == nil {
 		returnForbidden(w)
@@ -107,7 +107,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	token, err := user.GenerateToken()
 	if err != nil {
-		returnFail(w, err.Error())
+		returnInternalError(w, err.Error())
 		return
 	}
 
@@ -129,7 +129,7 @@ func returnMsg(w http.ResponseWriter, errMsg string, retData interface{}) {
 
 func returnOKMsg(w http.ResponseWriter, errMsg string, retData interface{}) {
 	if errMsg != "" {
-		returnFail(w, errMsg)
+		writeErrJSON(w, errMsg)
 	} else {
 		returnSuccess(w, retData)
 	}
@@ -137,16 +137,18 @@ func returnOKMsg(w http.ResponseWriter, errMsg string, retData interface{}) {
 
 func returnNotFound(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
-	returnFail(w, "Resource not found")
+	writeErrJSON(w, "Resource not found")
 }
 
 func returnBadRequest(w http.ResponseWriter, column string) {
+	errMsg := ""
 	w.WriteHeader(http.StatusBadRequest)
 	if column != "" {
-		returnFail(w, fmt.Sprintf("Column input error: %s", column))
+		errMsg = fmt.Sprintf("Column input error: %s", column)
 	} else {
-		returnFail(w, "Bad request")
+		errMsg = "Bad request"
 	}
+	writeErrJSON(w, errMsg)
 }
 
 func returnUnauthorized(w http.ResponseWriter) {
@@ -157,13 +159,9 @@ func returnForbidden(w http.ResponseWriter) {
 	http.Error(w, "Forbidden", http.StatusForbidden)
 }
 
-func returnFail(w http.ResponseWriter, errMsg string) {
-	ret := data.Return{
-		ReturnMessage: errMsg,
-		ReturnObj:     nil,
-	}
-
-	writeResponseJSON(w, &ret)
+func returnInternalError(w http.ResponseWriter, errMsg string) {
+	w.WriteHeader(http.StatusInternalServerError)
+	writeErrJSON(w, errMsg)
 }
 
 func returnSuccess(w http.ResponseWriter, retData interface{}) {
@@ -172,6 +170,14 @@ func returnSuccess(w http.ResponseWriter, retData interface{}) {
 		ReturnObj:     &retData,
 	}
 
+	writeResponseJSON(w, &ret)
+}
+
+func writeErrJSON(w http.ResponseWriter, errMsg string) {
+	ret := data.Return{
+		ReturnMessage: errMsg,
+		ReturnObj:     nil,
+	}
 	writeResponseJSON(w, &ret)
 }
 

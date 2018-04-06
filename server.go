@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"html"
 	"log"
 	"net/http"
 	"strings"
@@ -19,12 +17,17 @@ const (
 	prefixURL = "/auth"
 )
 
+// Route define the end point of server
 type Route struct {
 	Name        string
 	Method      string
 	Pattern     string
 	HandlerFunc http.HandlerFunc
-	GrantType   []interface{}
+
+	// 0 means super admin can use this API
+	// 1 means enterprise admin can use this API
+	// 2 means user in enterprise can use this API
+	GrantType []interface{}
 }
 
 type Routes []Route
@@ -34,27 +37,22 @@ var routes Routes
 func setUpRoutes() {
 	routes = Routes{
 		Route{
-			"Base", "GET", "/", func(w http.ResponseWriter, r *http.Request) {
-				fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-			}, []interface{}{0, 1, 2},
-		},
-		Route{
 			"GetEnterprises", "GET", "/enterprises", EnterprisesGetHandler, []interface{}{0},
 		},
 		Route{
-			"GetEnterprises", "GET", "/enterprise/{enterpriseID}", EnterpriseGetHandler, []interface{}{0},
+			"GetEnterprises", "GET", "/enterprise/{enterpriseID}", EnterpriseGetHandler, []interface{}{0, 1, 2},
 		},
 		Route{
 			"GetUsers", "GET", "/enterprise/{enterpriseID}/users", UsersGetHandler, []interface{}{0, 1},
 		},
 		Route{
-			"GetUser", "GET", "/enterprise/{enterpriseID}/user/{userID}", UserGetHandler, []interface{}{0, 1},
+			"GetUser", "GET", "/enterprise/{enterpriseID}/user/{userID}", UserGetHandler, []interface{}{0, 1, 2},
 		},
 		Route{
-			"GetApps", "GET", "/enterprise/{enterpriseID}/apps", AppsGetHandler, []interface{}{0, 1},
+			"GetApps", "GET", "/enterprise/{enterpriseID}/apps", AppsGetHandler, []interface{}{0, 1, 2},
 		},
 		Route{
-			"GetApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppGetHandler, []interface{}{0, 1},
+			"GetApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppGetHandler, []interface{}{0, 1, 2},
 		},
 		Route{
 			"Login", "POST", "/login", LoginHandler, []interface{}{},
@@ -64,42 +62,53 @@ func setUpRoutes() {
 
 func setUpDB() {
 	db := dao.MYSQLController{}
-	db.InitDB("127.0.0.1", 3306, "auth", "root", "password")
+	url, port, user, passwd, dbName := util.GetMySQLConfig()
+	log.Printf("Init mysql: %s:%s@%s:%d/%s\n", user, passwd, url, port, dbName)
+	db.InitDB(url, port, dbName, user, passwd)
 	setDB(&db)
 }
 
 func checkAuth(r *http.Request, route Route) bool {
 	log.Printf("Access: %s %s", r.Method, r.RequestURI)
 	if len(route.GrantType) == 0 {
-		log.Print("[Auth check] pass: no need")
+		log.Println("[Auth check] pass: no need")
 		return true
 	}
 
 	authorization := r.Header.Get("Authorization")
 	vals := strings.Split(authorization, " ")
 	if len(vals) < 2 {
-		log.Print("[Auth check] Auth fail: no header")
+		log.Println("[Auth check] Auth fail: no header")
 		return false
 	}
 
 	userInfo := data.User{}
 	err := userInfo.SetValueWithToken(vals[1])
 	if err != nil {
-		log.Printf("[Auth check] Auth fail: no valid token [%s]", err.Error())
+		log.Printf("[Auth check] Auth fail: no valid token [%s]\n", err.Error())
 		return false
 	}
 
 	if !util.IsInSlice(*userInfo.Type, route.GrantType) {
-		log.Printf("[Auth check] Need user be [%#v], get [%d]", route.GrantType, *userInfo.Type)
+		log.Printf("[Auth check] Need user be [%v], get [%d]\n", route.GrantType, *userInfo.Type)
 		return false
 	}
 
+	vars := mux.Vars(r)
 	// Type 1 can only check enterprise of itself
-	if *userInfo.Type == 1 {
-		vars := mux.Vars(r)
+	// Type 2 can only check enterprise of itself and user info of itself
+	if *userInfo.Type == 1 || *userInfo.Type == 2 {
 		enterpriseID := vars["enterpriseID"]
 		if enterpriseID != *userInfo.Enterprise {
-			log.Printf("[Auth check] admin of [%s] can not access [%s]", *userInfo.Enterprise, enterpriseID)
+			log.Printf("[Auth check] user of [%s] can not access [%s]\n", *userInfo.Enterprise, enterpriseID)
+			return false
+		}
+	}
+
+	if *userInfo.Type == 2 {
+		userID := vars["userID"]
+		if userID != "" && userID != userInfo.ID {
+			log.Printf("[Auth check] user [%s] can not access other users' info\n", userInfo.ID)
 			return false
 		}
 	}
@@ -126,7 +135,7 @@ func main() {
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				}
 			})
-		log.Printf("Setup for path [%s:%s]", route.Method, prefixURL+route.Pattern)
+		log.Printf("Setup for path [%s:%s], %+v", route.Method, prefixURL+route.Pattern, route.GrantType)
 	}
 
 	log.Printf("Start server on port %d", 11180)

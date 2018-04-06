@@ -12,13 +12,14 @@ const (
 
 // User store the basic logging information of user
 type User struct {
-	ID          string  `json:"id"`
-	DisplayName *string `json:"display_name"`
-	Email       *string `json:"email"`
-	Enterprise  *string `json:"enterprise"`
-	Type        *int    `json:"type"`
-	Password    *string `json:"-"`
-	Status      *int    `json:"status"`
+	ID          string      `json:"id"`
+	DisplayName *string     `json:"display_name"`
+	Email       *string     `json:"email"`
+	Enterprise  *string     `json:"enterprise"`
+	Type        *int        `json:"type"`
+	Password    *string     `json:"-"`
+	Status      *int        `json:"status"`
+	CustomInfo  interface{} `json:"custom"`
 }
 
 // Users means []User
