@@ -23,7 +23,7 @@
 # Dump of table apps
 # ------------------------------------------------------------
 
-CREATE TABLE `apps` (
+CREATE TABLE IF NOT EXISTS `apps` (
   `id` bigint(20) NOT NULL,
   `uuid` char(36) NOT NULL,
   `name` char(64) NOT NULL DEFAULT '',
@@ -53,11 +53,11 @@ UNLOCK TABLES;
 # Dump of table enterprises
 # ------------------------------------------------------------
 
-CREATE TABLE `enterprises` (
+CREATE TABLE IF NOT EXISTS `enterprises` (
   `id` bigint(20) NOT NULL,
   `uuid` char(36) NOT NULL,
   `name` varchar(64) NOT NULL DEFAULT '',
-  `admin_user` char(32) DEFAULT NULL,
+  `admin_user` char(36) DEFAULT NULL,
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`),
@@ -70,7 +70,7 @@ LOCK TABLES `enterprises` WRITE;
 
 INSERT INTO `enterprises` (`id`, `uuid`, `name`, `admin_user`, `created_time`)
 VALUES
-	(1,'bb3e3925-f0ad-11e7-bd86-0242ac120003','emotibot','d3e03673-f0ad-11e7-bd86-0242ac12','2018-04-05 15:21:02');
+	(1,'bb3e3925-f0ad-11e7-bd86-0242ac120003','emotibot','4b21158a-3953-11e8-8a71-0242ac110003','2018-04-05 15:21:02');
 
 /*!40000 ALTER TABLE `enterprises` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -79,7 +79,7 @@ UNLOCK TABLES;
 # Dump of table user_column
 # ------------------------------------------------------------
 
-CREATE TABLE `user_column` (
+CREATE TABLE IF NOT EXISTS `user_column` (
   `id` bigint(20) NOT NULL,
   `column` char(32) NOT NULL DEFAULT '',
   `display_name` varchar(64) NOT NULL DEFAULT '',
@@ -104,7 +104,7 @@ UNLOCK TABLES;
 # Dump of table user_info
 # ------------------------------------------------------------
 
-CREATE TABLE `user_info` (
+CREATE TABLE IF NOT EXISTS `user_info` (
   `id` bigint(20) NOT NULL,
   `user_id` char(36) NOT NULL DEFAULT '',
   `column_id` bigint(64) NOT NULL,
@@ -121,7 +121,7 @@ LOCK TABLES `user_info` WRITE;
 
 INSERT INTO `user_info` (`id`, `user_id`, `column_id`, `value`)
 VALUES
-	(0,'d3e03673-f0ad-11e7-bd86-0242ac12',0,'custom_value1');
+	(0,'4b21158a-3953-11e8-8a71-0242ac110003',0,'custom_value1');
 
 /*!40000 ALTER TABLE `user_info` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -130,7 +130,7 @@ UNLOCK TABLES;
 # Dump of table users
 # ------------------------------------------------------------
 
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `id` bigint(20) NOT NULL,
   `uuid` char(36) NOT NULL,
   `display_name` varchar(64) NOT NULL DEFAULT '',
@@ -149,7 +149,7 @@ LOCK TABLES `users` WRITE;
 
 INSERT INTO `users` (`id`, `uuid`, `display_name`, `email`, `enterprise`, `type`, `password`, `created_time`, `status`)
 VALUES
-	(1,'d3e03673-f0ad-11e7-bd86-0242ac12','TestUser','test@test.com','bb3e3925-f0ad-11e7-bd86-0242ac120003',1,'5d9c68c6c50ed3d02a2fcf54f63993b6','2018-04-05 15:21:54',1);
+	(1,'4b21158a-3953-11e8-8a71-0242ac110003','TestUser','test@test.com','bb3e3925-f0ad-11e7-bd86-0242ac120003',1,'5d9c68c6c50ed3d02a2fcf54f63993b6','2018-04-05 15:21:54',1);
 
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
