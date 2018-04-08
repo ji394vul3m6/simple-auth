@@ -6,15 +6,17 @@ import "litttlebear/simple-auth/data"
 type DB interface {
 	GetEnterprises() (*data.Enterprises, error)
 	GetEnterprise(enterpriseID string) (*data.Enterprise, error)
-	AddEnterprise(enterprise data.Enterprise) (*data.Enterprise, error)
+
+	AddEnterprise(enterprise *data.Enterprise) (string, error)
 	DeleteEnterprise(enterpriseID string) (bool, error)
 
 	GetUsers(enterpriseID string) (*data.Users, error)
 	GetUser(enterpriseID string, userID string) (*data.User, error)
 	GetAdminUser(enterpriseID string) (*data.User, error)
-	GetAuthUser(email string, passwd string) (enterpriseID string, user *data.User, err error)
-	AddUser(enterpriseID string, user data.User) (*data.User, error)
-	UpdateUser(enterpriseID string, user data.User) (*data.User, error)
+	GetAuthUser(email string, passwd string) (user *data.User, err error)
+
+	AddUser(enterpriseID string, user *data.User) (userID string, err error)
+	UpdateUser(enterpriseID string, user *data.User) error
 	DisableUser(enterpriseID string, userID string) (bool, error)
 	DeleteUser(enterpriseID string, userID string) (bool, error)
 

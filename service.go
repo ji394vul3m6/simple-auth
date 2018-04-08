@@ -36,19 +36,19 @@ func getEnterprise(enterpriseID string) (*data.Enterprise, string) {
 	enterprise.AdminUser = adminUser
 	return enterprise, ""
 }
-func getUsers(enterpriseID string) (*data.Users, string) {
+func getUsers(enterpriseID string) (*data.Users, error) {
 	enterprises, err := useDB.GetUsers(enterpriseID)
 	if err != nil {
-		return nil, err.Error()
+		return nil, err
 	}
-	return enterprises, ""
+	return enterprises, nil
 }
-func getUser(enterpriseID string, userID string) (*data.User, string) {
+func getUser(enterpriseID string, userID string) (*data.User, error) {
 	user, err := useDB.GetUser(enterpriseID, userID)
 	if err != nil {
-		return nil, err.Error()
+		return nil, err
 	}
-	return user, ""
+	return user, nil
 }
 func getApps(enterpriseID string) (*data.Apps, string) {
 	apps, err := useDB.GetApps(enterpriseID)
@@ -66,14 +66,30 @@ func getApp(enterpriseID string, appID string) (*data.App, string) {
 }
 
 func login(email string, passwd string) (*data.Enterprise, *data.User, string) {
-	enterpriseID, user, err := useDB.GetAuthUser(email, passwd)
+	user, err := useDB.GetAuthUser(email, passwd)
 	if err != nil {
 		return nil, nil, err.Error()
 	}
 
-	enterprise, err := useDB.GetEnterprise(enterpriseID)
-	if err != nil {
-		return nil, nil, err.Error()
+	var enterprise *data.Enterprise
+	if user.Enterprise != nil {
+		enterprise, err = useDB.GetEnterprise(*user.Enterprise)
+		if err != nil {
+			return nil, nil, err.Error()
+		}
 	}
 	return enterprise, user, ""
+}
+
+func addUser(enterpriseID string, user *data.User) (string, error) {
+	return useDB.AddUser(enterpriseID, user)
+}
+
+func deleteUser(enterpriseID string, userID string) error {
+	_, err := useDB.DeleteUser(enterpriseID, userID)
+	return err
+}
+
+func updateUser(enterpriseID string, user *data.User) error {
+	return useDB.UpdateUser(enterpriseID, user)
 }

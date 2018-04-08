@@ -16,7 +16,7 @@ type User struct {
 	DisplayName *string     `json:"display_name"`
 	Email       *string     `json:"email"`
 	Enterprise  *string     `json:"enterprise"`
-	Type        *int        `json:"type"`
+	Type        int         `json:"type"`
 	Password    *string     `json:"-"`
 	Status      *int        `json:"status"`
 	CustomInfo  interface{} `json:"custom"`

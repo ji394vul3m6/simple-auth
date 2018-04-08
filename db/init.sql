@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.7.20)
 # Database: auth
-# Generation Time: 2018-04-05 16:18:29 +0000
+# Generation Time: 2018-04-08 22:31:08 +0000
 # ************************************************************
 
 
@@ -23,8 +23,10 @@
 # Dump of table apps
 # ------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS `apps` (
-  `id` bigint(20) NOT NULL,
+DROP TABLE IF EXISTS `apps`;
+
+CREATE TABLE `apps` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `uuid` char(36) NOT NULL,
   `name` char(64) NOT NULL DEFAULT '',
   `start` timestamp NULL DEFAULT NULL,
@@ -53,8 +55,10 @@ UNLOCK TABLES;
 # Dump of table enterprises
 # ------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS `enterprises` (
-  `id` bigint(20) NOT NULL,
+DROP TABLE IF EXISTS `enterprises`;
+
+CREATE TABLE `enterprises` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `uuid` char(36) NOT NULL,
   `name` varchar(64) NOT NULL DEFAULT '',
   `admin_user` char(36) DEFAULT NULL,
@@ -79,8 +83,10 @@ UNLOCK TABLES;
 # Dump of table user_column
 # ------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS `user_column` (
-  `id` bigint(20) NOT NULL,
+DROP TABLE IF EXISTS `user_column`;
+
+CREATE TABLE `user_column` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `column` char(32) NOT NULL DEFAULT '',
   `display_name` varchar(64) NOT NULL DEFAULT '',
   `enterprise` char(36) NOT NULL DEFAULT '',
@@ -95,7 +101,7 @@ LOCK TABLES `user_column` WRITE;
 
 INSERT INTO `user_column` (`id`, `column`, `display_name`, `enterprise`, `note`)
 VALUES
-	(0,'custom1','自訂屬性1','bb3e3925-f0ad-11e7-bd86-0242ac120003','示範自訂屬性效果');
+	(1,'custom1','自訂屬性1','bb3e3925-f0ad-11e7-bd86-0242ac120003','示範自訂屬性效果');
 
 /*!40000 ALTER TABLE `user_column` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -104,8 +110,10 @@ UNLOCK TABLES;
 # Dump of table user_info
 # ------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS `user_info` (
-  `id` bigint(20) NOT NULL,
+DROP TABLE IF EXISTS `user_info`;
+
+CREATE TABLE `user_info` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `user_id` char(36) NOT NULL DEFAULT '',
   `column_id` bigint(64) NOT NULL,
   `value` text NOT NULL,
@@ -121,7 +129,7 @@ LOCK TABLES `user_info` WRITE;
 
 INSERT INTO `user_info` (`id`, `user_id`, `column_id`, `value`)
 VALUES
-	(0,'4b21158a-3953-11e8-8a71-0242ac110003',0,'custom_value1');
+	(1,'4b21158a-3953-11e8-8a71-0242ac110003',1,'custom_value1');
 
 /*!40000 ALTER TABLE `user_info` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -130,16 +138,18 @@ UNLOCK TABLES;
 # Dump of table users
 # ------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` bigint(20) NOT NULL,
-  `uuid` char(36) NOT NULL,
+DROP TABLE IF EXISTS `users`;
+
+CREATE TABLE `users` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `uuid` char(36) NOT NULL DEFAULT '',
   `display_name` varchar(64) NOT NULL DEFAULT '',
   `email` char(255) NOT NULL DEFAULT '',
   `enterprise` char(36) NOT NULL DEFAULT '',
   `type` tinyint(1) unsigned NOT NULL DEFAULT '2',
   `password` char(32) NOT NULL DEFAULT '',
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `status` tinyint(1) NOT NULL DEFAULT '0',
+  `status` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -36,27 +36,17 @@ var routes Routes
 
 func setUpRoutes() {
 	routes = Routes{
-		Route{
-			"GetEnterprises", "GET", "/enterprises", EnterprisesGetHandler, []interface{}{0},
-		},
-		Route{
-			"GetEnterprises", "GET", "/enterprise/{enterpriseID}", EnterpriseGetHandler, []interface{}{0, 1, 2},
-		},
-		Route{
-			"GetUsers", "GET", "/enterprise/{enterpriseID}/users", UsersGetHandler, []interface{}{0, 1},
-		},
-		Route{
-			"GetUser", "GET", "/enterprise/{enterpriseID}/user/{userID}", UserGetHandler, []interface{}{0, 1, 2},
-		},
-		Route{
-			"GetApps", "GET", "/enterprise/{enterpriseID}/apps", AppsGetHandler, []interface{}{0, 1, 2},
-		},
-		Route{
-			"GetApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppGetHandler, []interface{}{0, 1, 2},
-		},
-		Route{
-			"Login", "POST", "/login", LoginHandler, []interface{}{},
-		},
+		Route{"GetEnterprises", "GET", "/enterprises", EnterprisesGetHandler, []interface{}{0}},
+		Route{"GetEnterprises", "GET", "/enterprise/{enterpriseID}", EnterpriseGetHandler, []interface{}{0, 1, 2}},
+		Route{"GetUsers", "GET", "/enterprise/{enterpriseID}/users", UsersGetHandler, []interface{}{0, 1}},
+		Route{"GetUser", "GET", "/enterprise/{enterpriseID}/user/{userID}", UserGetHandler, []interface{}{0, 1, 2}},
+		Route{"GetApps", "GET", "/enterprise/{enterpriseID}/apps", AppsGetHandler, []interface{}{0, 1, 2}},
+		Route{"GetApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppGetHandler, []interface{}{0, 1, 2}},
+		Route{"Login", "POST", "/login", LoginHandler, []interface{}{}},
+
+		Route{"GetUser", "POST", "/enterprise/{enterpriseID}/user", UserAddHandler, []interface{}{0, 1, 2}},
+		Route{"GetUser", "PUT", "/enterprise/{enterpriseID}/user/{userID}", UserUpdateHandler, []interface{}{0, 1, 2}},
+		Route{"GetUser", "DELETE", "/enterprise/{enterpriseID}/user/{userID}", UserDeleteHandler, []interface{}{0, 1, 2}},
 	}
 }
 
@@ -89,15 +79,15 @@ func checkAuth(r *http.Request, route Route) bool {
 		return false
 	}
 
-	if !util.IsInSlice(*userInfo.Type, route.GrantType) {
-		log.Printf("[Auth check] Need user be [%v], get [%d]\n", route.GrantType, *userInfo.Type)
+	if !util.IsInSlice(userInfo.Type, route.GrantType) {
+		log.Printf("[Auth check] Need user be [%v], get [%d]\n", route.GrantType, userInfo.Type)
 		return false
 	}
 
 	vars := mux.Vars(r)
 	// Type 1 can only check enterprise of itself
 	// Type 2 can only check enterprise of itself and user info of itself
-	if *userInfo.Type == 1 || *userInfo.Type == 2 {
+	if userInfo.Type == 1 || userInfo.Type == 2 {
 		enterpriseID := vars["enterpriseID"]
 		if enterpriseID != *userInfo.Enterprise {
 			log.Printf("[Auth check] user of [%s] can not access [%s]\n", *userInfo.Enterprise, enterpriseID)
@@ -105,7 +95,7 @@ func checkAuth(r *http.Request, route Route) bool {
 		}
 	}
 
-	if *userInfo.Type == 2 {
+	if userInfo.Type == 2 {
 		userID := vars["userID"]
 		if userID != "" && userID != userInfo.ID {
 			log.Printf("[Auth check] user [%s] can not access other users' info\n", userInfo.ID)
@@ -140,4 +130,20 @@ func main() {
 
 	log.Printf("Start server on port %d", 11180)
 	log.Fatal(http.ListenAndServe(":11180", router))
+}
+
+func getRequester(r *http.Request) *data.User {
+	authorization := r.Header.Get("Authorization")
+	vals := strings.Split(authorization, " ")
+	if len(vals) < 2 {
+		return nil
+	}
+
+	userInfo := data.User{}
+	err := userInfo.SetValueWithToken(vals[1])
+	if err != nil {
+		return nil
+	}
+
+	return &userInfo
 }
