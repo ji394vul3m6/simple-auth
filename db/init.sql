@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.7.20)
 # Database: auth
-# Generation Time: 2018-04-08 22:31:08 +0000
+# Generation Time: 2018-04-11 19:10:54 +0000
 # ************************************************************
 
 
@@ -80,6 +80,91 @@ VALUES
 UNLOCK TABLES;
 
 
+# Dump of table modules
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `modules`;
+
+CREATE TABLE `modules` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `code` char(36) NOT NULL DEFAULT '',
+  `name` varchar(36) NOT NULL DEFAULT '',
+  `enterprise` char(36) NOT NULL DEFAULT '',
+  `cmd_list` char(64) NOT NULL,
+  `discription` varchar(200) NOT NULL DEFAULT '',
+  `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `uuid of enterprise` (`enterprise`),
+  CONSTRAINT `uuid of enterprise` FOREIGN KEY (`enterprise`) REFERENCES `enterprises` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+LOCK TABLES `modules` WRITE;
+/*!40000 ALTER TABLE `modules` DISABLE KEYS */;
+
+INSERT INTO `modules` (`id`, `code`, `name`, `enterprise`, `cmd_list`, `discription`, `created_time`)
+VALUES
+	(1,'moduleA','module A','bb3e3925-f0ad-11e7-bd86-0242ac120003','view,edit,create,delete,import,export','','2018-04-10 02:00:39');
+
+/*!40000 ALTER TABLE `modules` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+# Dump of table privileges
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `privileges`;
+
+CREATE TABLE `privileges` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `role` bigint(20) NOT NULL,
+  `module` bigint(20) NOT NULL,
+  `cmd_list` char(64) NOT NULL DEFAULT '',
+  `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `id of role` (`role`),
+  KEY `id of module` (`module`),
+  CONSTRAINT `id of module` FOREIGN KEY (`module`) REFERENCES `modules` (`id`),
+  CONSTRAINT `id of role` FOREIGN KEY (`role`) REFERENCES `roles` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+LOCK TABLES `privileges` WRITE;
+/*!40000 ALTER TABLE `privileges` DISABLE KEYS */;
+
+INSERT INTO `privileges` (`id`, `role`, `module`, `cmd_list`, `created_time`)
+VALUES
+	(1,1,1,'view,edit','2018-04-10 02:02:02');
+
+/*!40000 ALTER TABLE `privileges` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+# Dump of table roles
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `roles`;
+
+CREATE TABLE `roles` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `uuid` char(36) NOT NULL,
+  `name` char(36) NOT NULL,
+  `enterprise` char(36) NOT NULL DEFAULT '',
+  `discription` varchar(200) NOT NULL DEFAULT '',
+  `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `uuid` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+LOCK TABLES `roles` WRITE;
+/*!40000 ALTER TABLE `roles` DISABLE KEYS */;
+
+INSERT INTO `roles` (`id`, `uuid`, `name`, `enterprise`, `discription`, `created_time`)
+VALUES
+	(1,'18bdcc45-3c63-11e8-8a71-0242ac110003','role 1','bb3e3925-f0ad-11e7-bd86-0242ac120003','','2018-04-10 02:01:04');
+
+/*!40000 ALTER TABLE `roles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
 # Dump of table user_column
 # ------------------------------------------------------------
 
@@ -148,6 +233,7 @@ CREATE TABLE `users` (
   `enterprise` char(36) NOT NULL DEFAULT '',
   `type` tinyint(1) unsigned NOT NULL DEFAULT '2',
   `password` char(32) NOT NULL DEFAULT '',
+  `role` char(36) NOT NULL DEFAULT '',
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `status` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
@@ -157,9 +243,10 @@ CREATE TABLE `users` (
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 
-INSERT INTO `users` (`id`, `uuid`, `display_name`, `email`, `enterprise`, `type`, `password`, `created_time`, `status`)
+INSERT INTO `users` (`id`, `uuid`, `display_name`, `email`, `enterprise`, `type`, `password`, `role`, `created_time`, `status`)
 VALUES
-	(1,'4b21158a-3953-11e8-8a71-0242ac110003','TestUser','test@test.com','bb3e3925-f0ad-11e7-bd86-0242ac120003',1,'5d9c68c6c50ed3d02a2fcf54f63993b6','2018-04-05 15:21:54',1);
+	(1,'4b21158a-3953-11e8-8a71-0242ac110003','TestUser','test@test.com','bb3e3925-f0ad-11e7-bd86-0242ac120003',1,'5d9c68c6c50ed3d02a2fcf54f63993b6','','2018-04-05 15:21:54',1),
+	(2,'7d8d37b7-3c65-11e8-8a71-0242ac110003','TestUser2','test2@test.com','bb3e3925-f0ad-11e7-bd86-0242ac120003',2,'5d9c68c6c50ed3d02a2fcf54f63993b6','18bdcc45-3c63-11e8-8a71-0242ac110003','2018-04-10 02:18:13',1);
 
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
