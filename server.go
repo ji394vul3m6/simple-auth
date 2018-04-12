@@ -43,10 +43,25 @@ func setUpRoutes() {
 		Route{"GetApps", "GET", "/enterprise/{enterpriseID}/apps", AppsGetHandler, []interface{}{0, 1, 2}},
 		Route{"GetApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppGetHandler, []interface{}{0, 1, 2}},
 		Route{"Login", "POST", "/login", LoginHandler, []interface{}{}},
+		// Route{"ValidateToken", "GET", "/token/{token}", ValidateTokenHandler, []interface{}{}},
 
-		Route{"GetUser", "POST", "/enterprise/{enterpriseID}/user", UserAddHandler, []interface{}{0, 1, 2}},
-		Route{"GetUser", "PUT", "/enterprise/{enterpriseID}/user/{userID}", UserUpdateHandler, []interface{}{0, 1, 2}},
-		Route{"GetUser", "DELETE", "/enterprise/{enterpriseID}/user/{userID}", UserDeleteHandler, []interface{}{0, 1, 2}},
+		Route{"AddUser", "POST", "/enterprise/{enterpriseID}/user", UserAddHandler, []interface{}{0, 1, 2}},
+		Route{"UpdateUser", "PUT", "/enterprise/{enterpriseID}/user/{userID}", UserUpdateHandler, []interface{}{0, 1, 2}},
+		Route{"DeleteUser", "DELETE", "/enterprise/{enterpriseID}/user/{userID}", UserDeleteHandler, []interface{}{0, 1, 2}},
+
+		Route{"GetRoles", "GET", "/enterprise/{enterpriseID}/roles", RolesGetHandler, []interface{}{0, 1, 2}},
+		Route{"GetRole", "GET", "/enterprise/{enterpriseID}/role/{roleID}", RoleGetHandler, []interface{}{0, 1, 2}},
+		Route{"AddRole", "POST", "/enterprise/{enterpriseID}/role", RoleAddHandler, []interface{}{0, 1, 2}},
+		Route{"UpdateRole", "PUT", "/enterprise/{enterpriseID}/role/{roleID}", RoleUpdateHandler, []interface{}{0, 1, 2}},
+		Route{"DeleteRole", "DELETE", "/enterprise/{enterpriseID}/role/{roleID}", RoleDeleteHandler, []interface{}{0, 1, 2}},
+		Route{"GetModules", "GET", "/enterprise/{enterpriseID}/modules", ModulesGetHandler, []interface{}{0, 1, 2}},
+
+		// Route{"AddModules", "GET", "/enterprise/{enterpriseID}/module", ModuleAddHandler, []interface{}{0}},
+		// Route{"UpdateModules", "GET", "/enterprise/{enterpriseID}/module/{moduleCode}", ModuleUpdateHandler, []interface{}{0}},
+		// Route{"DeleteModules", "GET", "/enterprise/{enterpriseID}/module/{moduleCode}", ModuleDeleteHandler, []interface{}{0}},
+		// Route{"AddApp", "GET", "/enterprise/{enterpriseID}/app", AppAddHandler, []interface{}{0, 1}},
+		// Route{"UpdateApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppUpdateHandler, []interface{}{0, 1}},
+		// Route{"DeleteApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppDeleteHandler, []interface{}{0, 1}},
 	}
 }
 

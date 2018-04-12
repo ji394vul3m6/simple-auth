@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"litttlebear/simple-auth/dao"
 	"litttlebear/simple-auth/data"
 )
@@ -37,11 +38,11 @@ func getEnterprise(enterpriseID string) (*data.Enterprise, string) {
 	return enterprise, ""
 }
 func getUsers(enterpriseID string) (*data.Users, error) {
-	enterprises, err := useDB.GetUsers(enterpriseID)
+	users, err := useDB.GetUsers(enterpriseID)
 	if err != nil {
 		return nil, err
 	}
-	return enterprises, nil
+	return users, nil
 }
 func getUser(enterpriseID string, userID string) (*data.User, error) {
 	user, err := useDB.GetUser(enterpriseID, userID)
@@ -92,4 +93,51 @@ func deleteUser(enterpriseID string, userID string) error {
 
 func updateUser(enterpriseID string, user *data.User) error {
 	return useDB.UpdateUser(enterpriseID, user)
+}
+
+func getRoles(enterpriseID string) ([]*data.Role, error) {
+	ret, err := useDB.GetRoles(enterpriseID)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
+func getRole(enterpriseID string, roleID string) (*data.Role, error) {
+	ret, err := useDB.GetRole(enterpriseID, roleID)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
+func deleteRole(enterpriseID string, roleID string) (bool, error) {
+	ret, err := useDB.DeleteRole(enterpriseID, roleID)
+	if err != nil {
+		return false, err
+	}
+	return ret, nil
+}
+
+func addRole(enterpriseID string, role *data.Role) (string, error) {
+	return useDB.AddRole(enterpriseID, role)
+}
+
+func updateRole(enterpriseID string, roleID string, role *data.Role) (bool, error) {
+	roles, err := useDB.GetUsersOfRole(enterpriseID, roleID)
+	if err != nil {
+		return false, err
+	}
+	if roles != nil && len(*roles) > 0 {
+		return false, errors.New("Cannot remove role having user")
+	}
+	return useDB.UpdateRole(enterpriseID, roleID, role)
+}
+
+func getModules(enterpriseID string) ([]*data.Module, error) {
+	ret, err := useDB.GetModules(enterpriseID)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
 }

@@ -1,15 +1,18 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"litttlebear/simple-auth/data"
 	"litttlebear/simple-auth/enum"
 	"litttlebear/simple-auth/util"
+	"log"
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -244,14 +247,165 @@ func UserUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	returnSuccess(w, updatedUser)
 }
 
+func RolesGetHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+
+	retData, err := getRoles(enterpriseID)
+	if err != nil {
+		returnInternalError(w, err.Error())
+	} else {
+		returnSuccess(w, retData)
+	}
+}
+func RoleGetHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+	roleID := vars["roleID"]
+	if !util.IsValidUUID(roleID) {
+		returnBadRequest(w, "roleID")
+		return
+	}
+
+	retData, err := getRole(enterpriseID, roleID)
+	if err != nil {
+		returnInternalError(w, err.Error())
+	} else {
+		if retData == nil {
+			returnNotFound(w)
+		} else {
+			returnSuccess(w, retData)
+		}
+	}
+}
+func RoleDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+	roleID := vars["roleID"]
+	if !util.IsValidUUID(roleID) {
+		returnBadRequest(w, "roleID")
+		return
+	}
+
+	retData, err := deleteRole(enterpriseID, roleID)
+	if err != nil {
+		returnInternalError(w, err.Error())
+	} else {
+		returnSuccess(w, retData)
+	}
+}
+func RoleAddHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+	role, err := parseRoleFromRequest(r)
+	if err != nil {
+		returnBadRequest(w, err.Error())
+		return
+	}
+	id, err := addRole(enterpriseID, role)
+	if err != nil {
+		returnInternalError(w, err.Error())
+		return
+	}
+	newRole, err := getRole(enterpriseID, id)
+	if err != nil {
+		returnInternalError(w, err.Error())
+		return
+	}
+	returnSuccess(w, newRole)
+}
+func RoleUpdateHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+	roleID := vars["roleID"]
+	if !util.IsValidUUID(roleID) {
+		returnBadRequest(w, "roleID")
+		return
+	}
+	role, err := parseRoleFromRequest(r)
+	if err != nil {
+		returnBadRequest(w, err.Error())
+		return
+	}
+	ret, err := updateRole(enterpriseID, roleID, role)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			returnNotFound(w)
+			return
+		}
+		returnInternalError(w, err.Error())
+		return
+	}
+	returnSuccess(w, ret)
+}
+
+func ModulesGetHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	enterpriseID := vars["enterpriseID"]
+	if !util.IsValidUUID(enterpriseID) {
+		returnBadRequest(w, "enterpriseID")
+		return
+	}
+
+	retData, err := getModules(enterpriseID)
+	if err != nil {
+		returnInternalError(w, err.Error())
+	} else {
+		returnSuccess(w, retData)
+	}
+}
+func parseRoleFromRequest(r *http.Request) (*data.Role, error) {
+	name := strings.TrimSpace(r.FormValue("name"))
+	if name == "" {
+		return nil, errors.New("Invalid name")
+	}
+	discription := r.FormValue("description")
+	privilegeStr := r.FormValue("privilege")
+
+	privileges := map[string][]string{}
+	err := json.Unmarshal([]byte(privilegeStr), &privileges)
+	if err != nil {
+		log.Printf("Cannot decode privilegeStr: %s", err.Error())
+		return nil, err
+	}
+	ret := data.Role{
+		Name:        name,
+		Discription: discription,
+		Privileges:  privileges,
+	}
+	return &ret, nil
+}
+
 func loadUserFromRequest(r *http.Request) *data.User {
 	user := data.User{}
 	name := r.FormValue("name")
 	email := r.FormValue("email")
 	password := r.FormValue("password")
+	role := r.FormValue("role")
 	user.Email = &email
 	user.DisplayName = &name
 	user.Password = &password
+	user.Role = &role
 
 	userType, err := strconv.Atoi(r.FormValue("type"))
 	if err != nil {

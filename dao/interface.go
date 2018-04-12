@@ -7,9 +7,6 @@ type DB interface {
 	GetEnterprises() (*data.Enterprises, error)
 	GetEnterprise(enterpriseID string) (*data.Enterprise, error)
 
-	AddEnterprise(enterprise *data.Enterprise) (string, error)
-	DeleteEnterprise(enterpriseID string) (bool, error)
-
 	GetUsers(enterpriseID string) (*data.Users, error)
 	GetUser(enterpriseID string, userID string) (*data.User, error)
 	GetAdminUser(enterpriseID string) (*data.User, error)
@@ -17,8 +14,22 @@ type DB interface {
 
 	AddUser(enterpriseID string, user *data.User) (userID string, err error)
 	UpdateUser(enterpriseID string, user *data.User) error
-	DisableUser(enterpriseID string, userID string) (bool, error)
 	DeleteUser(enterpriseID string, userID string) (bool, error)
+
+	GetRoles(enterpriseID string) ([]*data.Role, error)
+	GetRole(enterpriseID string, roleID string) (*data.Role, error)
+	AddRole(enterprise string, role *data.Role) (string, error)
+	UpdateRole(enterprise string, roleID string, role *data.Role) (bool, error)
+	DeleteRole(enterprise string, roleID string) (bool, error)
+	GetUsersOfRole(enterpriseID string, roleID string) (*data.Users, error)
+
+	GetModules(enterpriseID string) ([]*data.Module, error)
+
+	// TODO
+	DisableUser(enterpriseID string, userID string) (bool, error)
+
+	AddEnterprise(enterprise *data.Enterprise) (string, error)
+	DeleteEnterprise(enterpriseID string) (bool, error)
 
 	GetApps(enterpriseID string) (*data.Apps, error)
 	GetApp(enterpriseID string, AppID string) (*data.App, error)
