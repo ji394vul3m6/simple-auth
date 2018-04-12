@@ -2,8 +2,9 @@ package main
 
 import (
 	"errors"
-	"litttlebear/simple-auth/dao"
-	"litttlebear/simple-auth/data"
+
+	"github.com/ji394vul3m6/simple-auth/dao"
+	"github.com/ji394vul3m6/simple-auth/data"
 )
 
 var useDB dao.DB

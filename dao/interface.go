@@ -1,6 +1,6 @@
 package dao
 
-import "litttlebear/simple-auth/data"
+import "github.com/ji394vul3m6/simple-auth/data"
 
 // DB define interface for different dao modules
 type DB interface {

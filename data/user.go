@@ -2,7 +2,8 @@ package data
 
 import (
 	"encoding/json"
-	"litttlebear/simple-auth/util"
+
+	"github.com/ji394vul3m6/simple-auth/util"
 )
 
 const (

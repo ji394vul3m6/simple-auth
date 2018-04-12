@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"litttlebear/simple-auth/dao"
-	"litttlebear/simple-auth/data"
-	"litttlebear/simple-auth/util"
+	"github.com/ji394vul3m6/simple-auth/data"
+	"github.com/ji394vul3m6/simple-auth/util"
+
+	"github.com/ji394vul3m6/simple-auth/dao"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -43,7 +44,7 @@ func setUpRoutes() {
 		Route{"GetApps", "GET", "/enterprise/{enterpriseID}/apps", AppsGetHandler, []interface{}{0, 1, 2}},
 		Route{"GetApp", "GET", "/enterprise/{enterpriseID}/app/{appID}", AppGetHandler, []interface{}{0, 1, 2}},
 		Route{"Login", "POST", "/login", LoginHandler, []interface{}{}},
-		// Route{"ValidateToken", "GET", "/token/{token}", ValidateTokenHandler, []interface{}{}},
+		Route{"ValidateToken", "GET", "/token/{token}", ValidateTokenHandler, []interface{}{}},
 
 		Route{"AddUser", "POST", "/enterprise/{enterpriseID}/user", UserAddHandler, []interface{}{0, 1, 2}},
 		Route{"UpdateUser", "PUT", "/enterprise/{enterpriseID}/user/{userID}", UserUpdateHandler, []interface{}{0, 1, 2}},
@@ -135,7 +136,9 @@ func main() {
 			Name(route.Name).
 			HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if checkAuth(r, route) {
-					route.HandlerFunc(w, r)
+					if route.HandlerFunc != nil {
+						route.HandlerFunc(w, r)
+					}
 				} else {
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				}

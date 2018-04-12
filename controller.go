@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"litttlebear/simple-auth/data"
-	"litttlebear/simple-auth/enum"
-	"litttlebear/simple-auth/util"
 	"log"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/ji394vul3m6/simple-auth/data"
+	"github.com/ji394vul3m6/simple-auth/enum"
+	"github.com/ji394vul3m6/simple-auth/util"
 
 	"github.com/gorilla/mux"
 )
@@ -374,6 +375,25 @@ func ModulesGetHandler(w http.ResponseWriter, r *http.Request) {
 		returnSuccess(w, retData)
 	}
 }
+
+func ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	token := vars["token"]
+	if token == "" {
+		returnBadRequest(w, "token")
+		return
+	}
+
+	userInfo := data.User{}
+	err := userInfo.SetValueWithToken(token)
+	if err != nil {
+		log.Println("Check token fail: ", err.Error())
+		returnBadRequest(w, "token")
+		return
+	}
+	returnSuccess(w, nil)
+}
+
 func parseRoleFromRequest(r *http.Request) (*data.Role, error) {
 	name := strings.TrimSpace(r.FormValue("name"))
 	if name == "" {

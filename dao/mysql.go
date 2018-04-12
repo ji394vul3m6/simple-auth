@@ -3,10 +3,11 @@ package dao
 import (
 	"database/sql"
 	"fmt"
-	"litttlebear/simple-auth/data"
 	"log"
 	"runtime"
 	"strings"
+
+	"github.com/ji394vul3m6/simple-auth/data"
 
 	"emotibot.com/emotigo/module/admin-api/util"
 )
